@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script  src="http://code.jquery.com/jquery-latest.min.js"> // jquery 사용 </script> 
+    <title>Home</title>
+    <script>
+      function showMessage(msg){
+          alert(msg);
+      }
+
+      function test_select(){
+        console.log("select 버튼 클릭")
+        $.post( "select.do", function(res) {
+          console.log("서버 통신 성공")
+          console.log("데이터 파싱")
+          var data = res.data;
+          var list = data.list;
+          
+          var server_msg = "id: "+ list[0].id + " name: "+ list[0].name
+
+          alert(JSON.stringify(list))
+
+        }).fail(function(res) {
+            console.log("select 서버 통신 실패")
+            alert( res.status );
+            alert( res.statusText );
+            alert( res.responseText );
+
+          })
+       }
+
+       function test_insert(msg){
+        console.log("insert 버튼 클릭")
+       
+        $.post( "/insert.do", 
+        {
+          name: msg
+        },
+        function(res) {
+          console.log("서버 통신 성공")
+          alert( "insert sucess" );
+
+        }).fail(function(res) {
+            console.log("서버 통신 실패")
+            alert( res.status );
+            alert( res.statusText );
+            alert( res.responseText );
+
+          })
+        }
+
+        function test_delete(msg){
+          console.log("delete 버튼 클릭")
+         
+          $.post( "/delete.do", 
+          {
+            name: msg
+          },
+          function(res) {
+            console.log("서버 통신 성공")
+            alert( "delete sucess" );
+  
+          }).fail(function(res) {
+              console.log("서버 통신 실패")
+              alert( res.status );
+              alert( res.statusText );
+              alert( res.responseText );
+  
+            })
+          }
+  
+    </script>
+  </head>
+  <body>
+    한이음 테스트 페이지 입니다.
+    <br><br>
+    <button id="btn_select" onclick=test_select()>Select</button>
+    <button id="btn_insert" onclick="test_insert('테스트입니다')">Insert</button>
+    <button id="btn_delete" onclick="test_delete('테스트입니다')">Delete</button>
+  </body>
+</html>  

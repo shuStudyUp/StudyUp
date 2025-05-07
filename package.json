@@ -6,7 +6,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "knex:migrate": "knex migrate:latest", 
-    "knex:seed": "knex seed:run"     
+    "knex:migrate": "knex migrate:latest",
+    "knex:seed": "knex seed:run"
   }
 }

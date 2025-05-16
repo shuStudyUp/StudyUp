@@ -1,84 +1,109 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script  src="http://code.jquery.com/jquery-latest.min.js"> // jquery 사용 </script> 
-    <title>Home</title>
-    <script>
-      function showMessage(msg){
-          alert(msg); 
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyUp Test Page</title>
+  <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    button {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    #chatResponse {
+      margin-top: 10px;
+      white-space: pre-wrap;
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 100%;
+      min-height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h2>StudyUp 테스트 페이지</h2>
 
-      function test_select(){
-        console.log("select 버튼 클릭")
-        $.post( "select.do", function(res) {
-          console.log("서버 통신 성공")
-          console.log("데이터 파싱")
-          var data = res.data;
-          var list = data.list;
-          
-          var server_msg = "id: "+ list[0].id + " name: "+ list[0].name
+  <!-- ChatGPT 연동 부분 -->
+  <div>
+    <input type="text" id="chatInput" placeholder="ChatGPT에게 질문하기" style="width: 300px;" />
+    <button onclick="sendChat()">전송</button>
+    <div id="chatResponse"></div>
+  </div>
 
-          alert(JSON.stringify(list))
+  <hr />
 
-        }).fail(function(res) {
-            console.log("select 서버 통신 실패")
-            alert( res.status );
-            alert( res.statusText );
-            alert( res.responseText );
-
-          })
-       }
-
-       function test_insert(msg){
-        console.log("insert 버튼 클릭")
-       
-        $.post( "/insert.do", 
-        {
-          name: msg
-        },
-        function(res) {
-          console.log("서버 통신 성공")
-          alert( "insert sucess" );
-
-        }).fail(function(res) {
-            console.log("서버 통신 실패")
-            alert( res.status );
-            alert( res.statusText );
-            alert( res.responseText );
-
-          })
-        }
-
-        function test_delete(msg){
-          console.log("delete 버튼 클릭")
-         
-          $.post( "/delete.do", 
-          {
-            name: msg
-          },
-          function(res) {
-            console.log("서버 통신 성공")
-            alert( "delete sucess" );
-  
-          }).fail(function(res) {
-              console.log("서버 통신 실패")
-              alert( res.status );
-              alert( res.statusText );
-              alert( res.responseText );
-  
-            })
-          }
-  
-    </script>
-  </head>
-  <body>
-    한이음 테스트 페이지 입니다.
-    <br><br>
-    <button id="btn_select" onclick=test_select()>Select</button>
+  <!-- 기존 API 연동 부분 -->
+  <div>
+    <button id="btn_select" onclick="test_select()">Select</button>
     <button id="btn_insert" onclick="test_insert('테스트입니다')">Insert</button>
     <button id="btn_delete" onclick="test_delete('테스트입니다')">Delete</button>
-  </body>
-</html>  
+  </div>
+
+  <script>
+    // ChatGPT 통신 함수
+    function sendChat() {
+      const message = $('#chatInput').val().trim();
+      if (!message) {
+        alert("메시지를 입력하세요.");
+        return;
+      }
+      $('#chatResponse').text('응답 대기 중...');
+
+      $.ajax({
+        url: '/chat',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ message }),
+        success: function(res) {
+          $('#chatResponse').text(res.reply);
+        },
+        error: function(xhr) {
+          $('#chatResponse').text('오류 발생: ' + xhr.status + ' ' + xhr.statusText);
+        }
+      });
+    }
+
+    // Select 버튼 클릭 시
+    function test_select() {
+      console.log("select 버튼 클릭");
+      $.post("/select.do", function(res) {
+        console.log("서버 통신 성공");
+        console.log("데이터 파싱");
+        alert(JSON.stringify(res));
+      }).fail(function(res) {
+        console.log("select 서버 통신 실패");
+        alert(res.status + ": " + res.statusText);
+      });
+    }
+
+    // Insert 버튼 클릭 시
+    function test_insert(msg) {
+      console.log("insert 버튼 클릭");
+      $.post("/insert.do", { name: msg }, function(res) {
+        console.log("서버 통신 성공");
+        alert("insert success");
+      }).fail(function(res) {
+        console.log("insert 서버 통신 실패");
+        alert(res.status + ": " + res.statusText);
+      });
+    }
+
+    // Delete 버튼 클릭 시
+    function test_delete(msg) {
+      console.log("delete 버튼 클릭");
+      $.post("/delete.do", { name: msg }, function(res) {
+        console.log("서버 통신 성공");
+        alert("delete success");
+      }).fail(function(res) {
+        console.log("delete 서버 통신 실패");
+        alert(res.status + ": " + res.statusText);
+      });
+    }
+  </script>
+</body>
+</html>

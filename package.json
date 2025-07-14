@@ -1,15 +1,11 @@
 {
   "dependencies": {
     "body-parser": "^2.2.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "knex": "^3.1.0",
     "mysql": "^2.18.1",
-<<<<<<< HEAD
     "openai": "^5.8.3"
-=======
-    "openai": "^3.2.1"
->>>>>>> c797906be0d504d2f370ed54ed73bcac6be5ad85
   },
   "scripts": {
     "start": "node index.js",

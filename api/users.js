@@ -1,5 +1,5 @@
-// api/users.js
-var dbconn = require('../dbconn/dbconn.js'); // dbconn.js 경로 확인
+// api/users.js (전체 코드)
+var dbconn = require('../dbconn/dbconn.js');
 
 // 사용자 생성 API
 async function createUser(req, res) {
@@ -9,9 +9,7 @@ async function createUser(req, res) {
         return res.status(400).json({ success: false, error: '모든 필드를 입력해주세요.' });
     }
 
-    // 실제 앱에서는 비밀번호를 해싱해야 합니다! (예: bcrypt)
-    // 여기서는 예시를 위해 평문 비밀번호를 사용합니다.
-    const password_hash = password;
+    const password_hash = password; // 실제 앱에서는 비밀번호를 해싱해야 합니다!
 
     try {
         await dbconn('users').insert({
@@ -23,7 +21,7 @@ async function createUser(req, res) {
         res.status(200).json({ success: true, message: `사용자 "${username}"가 성공적으로 생성되었습니다.` });
     } catch (err) {
         console.error("❌ 사용자 생성 오류:", err);
-        if (err.code === 'ER_DUP_ENTRY') { // 중복 엔트리 오류 (UNIQUE 제약 조건 위반)
+        if (err.code === 'ER_DUP_ENTRY') {
             res.status(409).json({ success: false, error: '이미 존재하는 사용자 이름 또는 이메일입니다.' });
         } else {
             res.status(500).json({ success: false, error: '사용자 생성 중 오류 발생' });
@@ -34,7 +32,6 @@ async function createUser(req, res) {
 // 사용자 목록 조회 API
 async function listUsers(req, res) {
     try {
-        // 비밀번호 해시는 노출하지 않도록 특정 컬럼만 선택
         const users = await dbconn('users').select('id', 'username', 'email', 'created_at');
         console.log("✅ 사용자 목록 조회 성공:", users.length, "명");
         res.status(200).json({ success: true, data: { list: users } });
@@ -56,8 +53,33 @@ async function userStats(req, res) {
     }
 }
 
+// 💡 새로운 기능: 사용자 삭제 API
+async function deleteUser(req, res) {
+    const { id } = req.body; // 삭제할 사용자 ID를 받습니다.
+
+    if (!id) {
+        return res.status(400).json({ success: false, error: '삭제할 사용자 ID를 입력해주세요.' });
+    }
+
+    try {
+        const deletedRows = await dbconn('users').where({ id: id }).del();
+
+        if (deletedRows > 0) {
+            console.log(`✅ 사용자 ID ${id} 삭제 완료`);
+            res.status(200).json({ success: true, message: `사용자 ID ${id}가 성공적으로 삭제되었습니다.` });
+        } else {
+            console.log(`⚠️ 사용자 ID ${id}를 찾을 수 없거나 이미 삭제되었습니다.`);
+            res.status(404).json({ success: false, error: `사용자 ID ${id}를 찾을 수 없거나 이미 삭제되었습니다.` });
+        }
+    } catch (err) {
+        console.error("❌ 사용자 삭제 오류:", err);
+        res.status(500).json({ success: false, error: '사용자 삭제 중 오류 발생' });
+    }
+}
+
 module.exports = {
     createUser,
     listUsers,
-    userStats
+    userStats,
+    deleteUser // 💡 deleteUser 함수를 내보냅니다.
 };

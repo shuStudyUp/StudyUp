@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudyUp User Test Page</title>
+  <title>StudyUp Test Page</title>
   <script src="https://code.jquery.com/jquery-latest.min.js"></script>
   <style>
     body {
@@ -57,7 +57,7 @@
     button:hover {
       background-color: #2980b9;
     }
-    #chatResponse, #userListResponse, #userStatsResponse, #selectResultDisplay,
+    #chatResponse, #userListResponse, #userStatsResponse, #problemListResponse, #selectResultDisplay,
     .message-display {
       margin-top: 10px;
       white-space: pre-wrap;
@@ -130,20 +130,43 @@
       <h4>사용자 통계</h4>
       <button onclick="getUserStats()">사용자 통계 조회</button>
       <div id="userStatsResponse" class="message-display"></div>
+
+      <h4>사용자 삭제</h4>
+      <input type="text" id="deleteUserId" placeholder="삭제할 사용자 ID 입력" />
+      <button onclick="deleteUser()">사용자 삭제</button>
+      <div id="deleteUserStatus" class="message-display"></div>
     </div>
 
+    <hr />
+
+    <div class="section">
+      <h3>문제 은행 관리 (problems 테이블)</h3>
+      <h4>문제 추가 (수동)</h4>
+      <textarea id="addProblemQuestion" placeholder="문제 내용" rows="3"></textarea>
+      <textarea id="addProblemAnswer" placeholder="정답 내용" rows="2"></textarea>
+      <input type="text" id="addProblemCategory" placeholder="카테고리 (선택 사항)" />
+      <input type="text" id="addProblemDifficulty" placeholder="난이도 (선택 사항)" />
+      <button onclick="addProblem()">문제 추가</button>
+      <div id="addProblemStatus" class="message-display"></div>
+
+      <h4>문제 목록</h4>
+      <button onclick="listProblems()">문제 목록 조회</button>
+      <div id="problemListResponse" class="message-display"></div>
+
+      <h4>문제 삭제</h4>
+      <input type="text" id="deleteProblemId" placeholder="삭제할 문제 ID 입력" />
+      <button onclick="deleteProblem()">문제 삭제</button>
+      <div id="deleteProblemStatus" class="message-display"></div>
+    </div>
   </div>
 
   <script>
     function displayMessage(elementId, message, type = 'error') {
       const element = $(`#${elementId}`);
-      element.removeClass('error-message success-message message-display').addClass('message-display').text('');
+      element.removeClass('error-message success-message').text('');
       if (message) {
-        if (type === 'error') {
-          element.addClass('error-message');
-        } else if (type === 'success') {
-          element.addClass('success-message');
-        }
+        if (type === 'error') element.addClass('error-message');
+        else if (type === 'success') element.addClass('success-message');
         element.text(message);
       }
     }
@@ -151,10 +174,7 @@
     function sendChat() {
       const message = $('#chatInput').val().trim();
       const responseDiv = 'chatResponse';
-      if (!message) {
-        displayMessage(responseDiv, '메시지를 입력하세요.', 'error');
-        return;
-      }
+      if (!message) return displayMessage(responseDiv, '메시지를 입력하세요.', 'error');
       displayMessage(responseDiv, '응답 대기 중...', 'success');
       $.ajax({
         url: '/chat',
@@ -177,47 +197,38 @@
       $.post("/select.do", function(res) {
         if (res.data && res.data.list) {
           let html = '<ul>';
-          if (res.data.list.length === 0) {
-            html += '<li>데이터가 없습니다.</li>';
-          } else {
-            res.data.list.forEach(item => {
-              html += `<li>ID: ${item.id}, 이름: ${item.name}, 생성일: ${new Date(item.create_time).toLocaleString()}</li>`;
-            });
-          }
+          if (res.data.list.length === 0) html += '<li>데이터가 없습니다.</li>';
+          else res.data.list.forEach(item => {
+            html += `<li>ID: ${item.id}, 이름: ${item.name}, 생성일: ${new Date(item.create_time).toLocaleString()}</li>`;
+          });
           html += '</ul>';
           $(`#${responseDiv}`).html(html);
-        } else {
-          displayMessage(responseDiv, '조회 결과 형식이 올바르지 않습니다.', 'error');
-        }
-      }).fail(function(xhr) {
+        } else displayMessage(responseDiv, '조회 결과 형식이 올바르지 않습니다.', 'error');
+      }).fail(xhr => {
         displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
       });
     }
 
     function test_insert(msg) {
       const responseDiv = 'insertStatusMessage';
-      if (!msg) {
-        displayMessage(responseDiv, '이름을 입력하세요.', 'error');
-        return;
-      }
-      $.post("/insert.do", { name: msg }, function(res) {
+      if (!msg) return displayMessage(responseDiv, '이름을 입력하세요.', 'error');
+      displayMessage(responseDiv, '데이터 추가 중...', 'success');
+      $.post("/insert.do", { name: msg }, function() {
         displayMessage(responseDiv, '데이터가 성공적으로 추가되었습니다.', 'success');
         $('#insertNameInput').val('');
-      }).fail(function(xhr) {
+      }).fail(xhr => {
         displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
       });
     }
 
     function test_delete(msg) {
       const responseDiv = 'deleteStatusMessage';
-      if (!msg) {
-        displayMessage(responseDiv, '삭제할 이름을 입력하세요.', 'error');
-        return;
-      }
-      $.post("/delete.do", { name: msg }, function(res) {
+      if (!msg) return displayMessage(responseDiv, '삭제할 이름을 입력하세요.', 'error');
+      displayMessage(responseDiv, '데이터 삭제 중...', 'success');
+      $.post("/delete.do", { name: msg }, function() {
         displayMessage(responseDiv, '데이터가 성공적으로 삭제되었습니다.', 'success');
         $('#deleteNameInput').val('');
-      }).fail(function(xhr) {
+      }).fail(xhr => {
         displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
       });
     }
@@ -227,10 +238,9 @@
       const email = $('#createUserEmail').val().trim();
       const password = $('#createUserPassword').val().trim();
       const responseDiv = 'createUserStatus';
-      if (!username || !email || !password) {
-        displayMessage(responseDiv, '모든 필드를 입력해주세요.', 'error');
-        return;
-      }
+      if (!username || !email || !password)
+        return displayMessage(responseDiv, '모든 필드를 입력해주세요.', 'error');
+      displayMessage(responseDiv, '사용자 생성 중...', 'success');
       $.ajax({
         url: '/users/create',
         method: 'POST',
@@ -238,9 +248,7 @@
         data: JSON.stringify({ username, email, password }),
         success: function(res) {
           displayMessage(responseDiv, res.message || '사용자가 성공적으로 생성되었습니다.', 'success');
-          $('#createUsername').val('');
-          $('#createUserEmail').val('');
-          $('#createUserPassword').val('');
+          $('#createUsername, #createUserEmail, #createUserPassword').val('');
         },
         error: function(xhr) {
           let errorMessage = '알 수 없는 오류';
@@ -266,13 +274,10 @@
         success: function(res) {
           if (res.success && res.data && res.data.list) {
             let html = '<ul>';
-            if (res.data.list.length === 0) {
-              html += '<li>사용자가 없습니다.</li>';
-            } else {
-              res.data.list.forEach(user => {
-                html += `<li>ID: ${user.id}, 이름: ${user.username}, 이메일: ${user.email}, 생성일: ${new Date(user.created_at).toLocaleString()}</li>`;
-              });
-            }
+            if (res.data.list.length === 0) html += '<li>사용자가 없습니다.</li>';
+            else res.data.list.forEach(user => {
+              html += `<li>ID: ${user.id}, 이름: ${user.username}, 이메일: ${user.email}, 생성일: ${new Date(user.created_at).toLocaleString()}</li>`;
+            });
             html += '</ul>';
             $(`#${responseDiv}`).html(html);
           } else {
@@ -302,6 +307,134 @@
         },
         error: function(xhr) {
           displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+        }
+      });
+    }
+
+    function addProblem() {
+      // 변수명 서버와 일치
+      const question_text = $('#addProblemQuestion').val().trim();
+      const answer_text = $('#addProblemAnswer').val().trim();
+      const category = $('#addProblemCategory').val().trim();
+      const difficulty = $('#addProblemDifficulty').val().trim();
+      const responseDiv = 'addProblemStatus';
+
+      if (!question_text || !answer_text) {
+        displayMessage(responseDiv, '문제 내용과 정답을 모두 입력해주세요.', 'error');
+        return;
+      }
+      displayMessage(responseDiv, '문제 추가 중...', 'success');
+      $.ajax({
+        url: '/problems/add',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ question_text, answer_text, category, difficulty }),
+        success: function(res) {
+          displayMessage(responseDiv, res.message || '문제가 성공적으로 추가되었습니다.', 'success');
+          $('#addProblemQuestion, #addProblemAnswer, #addProblemCategory, #addProblemDifficulty').val('');
+        },
+        error: function(xhr) {
+          let errorMessage = '알 수 없는 오류';
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            errorMessage = errorData.error || xhr.statusText;
+          } catch (e) {
+            errorMessage = xhr.statusText;
+          }
+          displayMessage(responseDiv, '오류 발생: ' + errorMessage, 'error');
+        }
+      });
+    }
+
+    function listProblems() {
+      const responseDiv = 'problemListResponse';
+      displayMessage(responseDiv, '문제 목록 조회 중...', 'success');
+      $.ajax({
+        url: '/problems/list',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        success: function(res) {
+          if (res.success && res.data && res.data.list) {
+            let html = '<ul>';
+            if (res.data.list.length === 0) html += '<li>문제가 없습니다.</li>';
+            else res.data.list.forEach(p => {
+              html += `<li>ID: ${p.id}, 문제: ${p.question_text.substring(0, 50)}..., 정답: ${p.answer_text.substring(0, 30)}... (카테고리: ${p.category || '없음'}, 난이도: ${p.difficulty || '없음'})</li>`;
+            });
+            html += '</ul>';
+            $(`#${responseDiv}`).html(html);
+          } else {
+            displayMessage(responseDiv, '문제 목록 조회 실패: ' + (res.error || '알 수 없는 오류'), 'error');
+          }
+        },
+        error: function(xhr) {
+          displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+        }
+      });
+    }
+
+    // 💡 새로운 기능: 문제 삭제 함수
+    function deleteProblem() {
+      const problemId = $('#deleteProblemId').val().trim();
+      const responseDiv = 'deleteProblemStatus';
+
+      if (!problemId) {
+        displayMessage(responseDiv, '삭제할 문제 ID를 입력해주세요.', 'error');
+        return;
+      }
+      displayMessage(responseDiv, `문제 ID ${problemId} 삭제 중...`, 'success');
+      $.ajax({
+        url: '/problems/delete', // 백엔드 라우트
+        method: 'POST', // DELETE 대신 POST를 사용 (Knex delete()는 POST로도 가능)
+        contentType: 'application/json',
+        data: JSON.stringify({ id: problemId }), // ID를 객체로 보냄
+        success: function(res) {
+          displayMessage(responseDiv, res.message || `문제 ID ${problemId}가 성공적으로 삭제되었습니다.`, 'success');
+          $('#deleteProblemId').val('');
+          listProblems(); // 삭제 후 목록 새로고침
+        },
+        error: function(xhr) {
+          let errorMessage = '알 수 없는 오류';
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            errorMessage = errorData.error || xhr.statusText;
+          } catch (e) {
+            errorMessage = xhr.statusText;
+          }
+          displayMessage(responseDiv, '오류 발생: ' + errorMessage, 'error');
+        }
+      });
+    }
+
+    // 💡 새로운 기능: 사용자 삭제 함수
+    function deleteUser() {
+      const userId = $('#deleteUserId').val().trim();
+      const responseDiv = 'deleteUserStatus';
+
+      if (!userId) {
+        displayMessage(responseDiv, '삭제할 사용자 ID를 입력해주세요.', 'error');
+        return;
+      }
+      displayMessage(responseDiv, `사용자 ID ${userId} 삭제 중...`, 'success');
+      $.ajax({
+        url: '/users/delete', // 백엔드 라우트
+        method: 'POST', // DELETE 대신 POST를 사용
+        contentType: 'application/json',
+        data: JSON.stringify({ id: userId }), // ID를 객체로 보냄
+        success: function(res) {
+          displayMessage(responseDiv, res.message || `사용자 ID ${userId}가 성공적으로 삭제되었습니다.`, 'success');
+          $('#deleteUserId').val('');
+          listUsers(); // 삭제 후 목록 새로고침
+        },
+        error: function(xhr) {
+          let errorMessage = '알 수 없는 오류';
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            errorMessage = errorData.error || xhr.statusText;
+          } catch (e) {
+            errorMessage = xhr.statusText;
+          }
+          displayMessage(responseDiv, '오류 발생: ' + errorMessage, 'error');
         }
       });
     }

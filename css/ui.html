@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Study Up</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: linear-gradient(to bottom, #d1fae5, #fef9c3);
+      color: #065f46;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    .main {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      position: relative;
+    }
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: pulse 6s infinite ease-in-out;
+    }
+    .bubble-yellow {
+      width: 24rem;
+      height: 24rem;
+      background-color: #fef08a;
+      top: -5rem;
+      left: -5rem;
+    }
+    .bubble-green {
+      width: 18rem;
+      height: 18rem;
+      background-color: #bbf7d0;
+      bottom: -6rem;
+      right: -6rem;
+      animation-duration: 8s;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: #047857;
+    }
+    p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .btn-group {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      cursor: pointer;
+    }
+    .btn-start {
+      background-color: #4ade80;
+      color: white;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .btn-start:hover {
+      background-color: #22c55e;
+    }
+    .btn-outline {
+      border: 2px solid #facc15;
+      color: #f59e0b;
+      background: none;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+    @media (min-width: 768px) {
+      .features {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 1.5rem;
+      animation: bounce 2s infinite;
+      color: #10b981;
+      font-size: 0.875rem;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(10px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div class="bubble bubble-yellow"></div>
+    <div class="bubble bubble-green"></div>
+
+    <h1>✨ Study Up</h1>
+    <p>따뜻한 교육, 똑똑한 학습 🌱 아이들을 위한 맞춤형 문제은행 플랫폼</p>
+
+    <div class="btn-group">
+      <button class="btn btn-start" onclick="goToHome()">시작하기</button>
+      <button class="btn btn-outline">더 알아보기</button>
+    </div>
+
+
+    <div class="scroll-hint">아래로 스크롤하여 더 알아보세요</div>
+  </div>
+
+  <script>
+    function goToHome() {
+      // 예시: home.html 페이지로 이동
+      window.location.href = "ui_2.html";
+    }
+  </script>
+</body>
+</html>

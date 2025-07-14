@@ -1,84 +1,310 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script  src="http://code.jquery.com/jquery-latest.min.js"> // jquery 사용 </script> 
-    <title>Home</title>
-    <script>
-      function showMessage(msg){
-          alert(msg); 
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyUp User Test Page</title>
+  <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f7f6;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    .section h3 {
+      color: #3498db;
+      margin-bottom: 15px;
+    }
+    input[type="text"], input[type="email"], input[type="password"], textarea {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 5px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    #chatResponse, #userListResponse, #userStatsResponse, #selectResultDisplay,
+    .message-display {
+      margin-top: 10px;
+      white-space: pre-wrap;
+      border: 1px solid #eee;
+      padding: 10px;
+      width: 100%;
+      min-height: 50px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    .error-message {
+      color: red;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .success-message {
+      color: green;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    hr {
+      margin: 30px 0;
+      border: 0;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>StudyUp 테스트 페이지</h2>
 
-      function test_select(){
-        console.log("select 버튼 클릭")
-        $.post( "select.do", function(res) {
-          console.log("서버 통신 성공")
-          console.log("데이터 파싱")
-          var data = res.data;
-          var list = data.list;
-          
-          var server_msg = "id: "+ list[0].id + " name: "+ list[0].name
+    <div class="section">
+      <h3>ChatGPT 연동</h3>
+      <input type="text" id="chatInput" placeholder="ChatGPT에게 질문하기" />
+      <button onclick="sendChat()">전송</button>
+      <div id="chatResponse" class="message-display"></div>
+    </div>
 
-          alert(JSON.stringify(list))
+    <hr />
 
-        }).fail(function(res) {
-            console.log("select 서버 통신 실패")
-            alert( res.status );
-            alert( res.statusText );
-            alert( res.responseText );
+    <div class="section">
+      <h3>기존 데이터 관리 (test_tb)</h3>
+      <button onclick="test_select()">Select (모든 데이터 조회)</button>
+      <div id="selectResultDisplay" class="message-display"></div>
+      <br>
+      <input type="text" id="insertNameInput" placeholder="추가할 이름 입력" />
+      <button onclick="test_insert($('#insertNameInput').val())">Insert (데이터 추가)</button>
+      <div id="insertStatusMessage" class="message-display"></div>
+      <br>
+      <input type="text" id="deleteNameInput" placeholder="삭제할 이름 입력" />
+      <button onclick="test_delete($('#deleteNameInput').val())">Delete (데이터 삭제)</button>
+      <div id="deleteStatusMessage" class="message-display"></div>
+    </div>
 
-          })
-       }
+    <hr />
 
-       function test_insert(msg){
-        console.log("insert 버튼 클릭")
-       
-        $.post( "/insert.do", 
-        {
-          name: msg
-        },
-        function(res) {
-          console.log("서버 통신 성공")
-          alert( "insert sucess" );
+    <div class="section">
+      <h3>사용자 관리 (users 테이블)</h3>
+      <h4>사용자 생성</h4>
+      <input type="text" id="createUsername" placeholder="사용자 이름" />
+      <input type="email" id="createUserEmail" placeholder="이메일" />
+      <input type="password" id="createUserPassword" placeholder="비밀번호" />
+      <button onclick="createUser()">사용자 생성</button>
+      <div id="createUserStatus" class="message-display"></div>
 
-        }).fail(function(res) {
-            console.log("서버 통신 실패")
-            alert( res.status );
-            alert( res.statusText );
-            alert( res.responseText );
+      <h4>사용자 목록</h4>
+      <button onclick="listUsers()">사용자 목록 조회</button>
+      <div id="userListResponse" class="message-display"></div>
 
-          })
+      <h4>사용자 통계</h4>
+      <button onclick="getUserStats()">사용자 통계 조회</button>
+      <div id="userStatsResponse" class="message-display"></div>
+    </div>
+
+  </div>
+
+  <script>
+    function displayMessage(elementId, message, type = 'error') {
+      const element = $(`#${elementId}`);
+      element.removeClass('error-message success-message message-display').addClass('message-display').text('');
+      if (message) {
+        if (type === 'error') {
+          element.addClass('error-message');
+        } else if (type === 'success') {
+          element.addClass('success-message');
         }
+        element.text(message);
+      }
+    }
 
-        function test_delete(msg){
-          console.log("delete 버튼 클릭")
-         
-          $.post( "/delete.do", 
-          {
-            name: msg
-          },
-          function(res) {
-            console.log("서버 통신 성공")
-            alert( "delete sucess" );
-  
-          }).fail(function(res) {
-              console.log("서버 통신 실패")
-              alert( res.status );
-              alert( res.statusText );
-              alert( res.responseText );
-  
-            })
+    function sendChat() {
+      const message = $('#chatInput').val().trim();
+      const responseDiv = 'chatResponse';
+      if (!message) {
+        displayMessage(responseDiv, '메시지를 입력하세요.', 'error');
+        return;
+      }
+      displayMessage(responseDiv, '응답 대기 중...', 'success');
+      $.ajax({
+        url: '/chat',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ message }),
+        success: function(res) {
+          displayMessage(responseDiv, res.reply, 'success');
+          $('#chatInput').val('');
+        },
+        error: function(xhr) {
+          displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+        }
+      });
+    }
+
+    function test_select() {
+      const responseDiv = 'selectResultDisplay';
+      displayMessage(responseDiv, '데이터 조회 중...', 'success');
+      $.post("/select.do", function(res) {
+        if (res.data && res.data.list) {
+          let html = '<ul>';
+          if (res.data.list.length === 0) {
+            html += '<li>데이터가 없습니다.</li>';
+          } else {
+            res.data.list.forEach(item => {
+              html += `<li>ID: ${item.id}, 이름: ${item.name}, 생성일: ${new Date(item.create_time).toLocaleString()}</li>`;
+            });
           }
-  
-    </script>
-  </head>
-  <body>
-    한이음 테스트 페이지 입니다.
-    <br><br>
-    <button id="btn_select" onclick=test_select()>Select</button>
-    <button id="btn_insert" onclick="test_insert('테스트입니다')">Insert</button>
-    <button id="btn_delete" onclick="test_delete('테스트입니다')">Delete</button>
-  </body>
-</html>  
+          html += '</ul>';
+          $(`#${responseDiv}`).html(html);
+        } else {
+          displayMessage(responseDiv, '조회 결과 형식이 올바르지 않습니다.', 'error');
+        }
+      }).fail(function(xhr) {
+        displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+      });
+    }
+
+    function test_insert(msg) {
+      const responseDiv = 'insertStatusMessage';
+      if (!msg) {
+        displayMessage(responseDiv, '이름을 입력하세요.', 'error');
+        return;
+      }
+      $.post("/insert.do", { name: msg }, function(res) {
+        displayMessage(responseDiv, '데이터가 성공적으로 추가되었습니다.', 'success');
+        $('#insertNameInput').val('');
+      }).fail(function(xhr) {
+        displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+      });
+    }
+
+    function test_delete(msg) {
+      const responseDiv = 'deleteStatusMessage';
+      if (!msg) {
+        displayMessage(responseDiv, '삭제할 이름을 입력하세요.', 'error');
+        return;
+      }
+      $.post("/delete.do", { name: msg }, function(res) {
+        displayMessage(responseDiv, '데이터가 성공적으로 삭제되었습니다.', 'success');
+        $('#deleteNameInput').val('');
+      }).fail(function(xhr) {
+        displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+      });
+    }
+
+    function createUser() {
+      const username = $('#createUsername').val().trim();
+      const email = $('#createUserEmail').val().trim();
+      const password = $('#createUserPassword').val().trim();
+      const responseDiv = 'createUserStatus';
+      if (!username || !email || !password) {
+        displayMessage(responseDiv, '모든 필드를 입력해주세요.', 'error');
+        return;
+      }
+      $.ajax({
+        url: '/users/create',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ username, email, password }),
+        success: function(res) {
+          displayMessage(responseDiv, res.message || '사용자가 성공적으로 생성되었습니다.', 'success');
+          $('#createUsername').val('');
+          $('#createUserEmail').val('');
+          $('#createUserPassword').val('');
+        },
+        error: function(xhr) {
+          let errorMessage = '알 수 없는 오류';
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            errorMessage = errorData.error || xhr.statusText;
+          } catch (e) {
+            errorMessage = xhr.statusText;
+          }
+          displayMessage(responseDiv, '오류 발생: ' + errorMessage, 'error');
+        }
+      });
+    }
+
+    function listUsers() {
+      const responseDiv = 'userListResponse';
+      displayMessage(responseDiv, '사용자 목록 조회 중...', 'success');
+      $.ajax({
+        url: '/users/list',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        success: function(res) {
+          if (res.success && res.data && res.data.list) {
+            let html = '<ul>';
+            if (res.data.list.length === 0) {
+              html += '<li>사용자가 없습니다.</li>';
+            } else {
+              res.data.list.forEach(user => {
+                html += `<li>ID: ${user.id}, 이름: ${user.username}, 이메일: ${user.email}, 생성일: ${new Date(user.created_at).toLocaleString()}</li>`;
+              });
+            }
+            html += '</ul>';
+            $(`#${responseDiv}`).html(html);
+          } else {
+            displayMessage(responseDiv, '사용자 목록 조회 실패: ' + (res.error || '알 수 없는 오류'), 'error');
+          }
+        },
+        error: function(xhr) {
+          displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+        }
+      });
+    }
+
+    function getUserStats() {
+      const responseDiv = 'userStatsResponse';
+      displayMessage(responseDiv, '사용자 통계 조회 중...', 'success');
+      $.ajax({
+        url: '/users/stats',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
+        success: function(res) {
+          if (res.success && res.data) {
+            displayMessage(responseDiv, `총 사용자 수: ${res.data.total_users}명`, 'success');
+          } else {
+            displayMessage(responseDiv, '사용자 통계 조회 실패: ' + (res.error || '알 수 없는 오류'), 'error');
+          }
+        },
+        error: function(xhr) {
+          displayMessage(responseDiv, '오류 발생: ' + xhr.status + ' ' + xhr.statusText, 'error');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -83,13 +83,23 @@
       border: 0;
       border-top: 1px solid #eee;
     }
+    /* 로그인 섹션 내 '회원가입' 링크 스타일 */
+    .scroll-to-section {
+      color: #3498db;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .scroll-to-section:hover {
+      color: #2980b9;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>StudyUp 테스트 페이지</h2>
 
-    <div class="section">
+    <!-- ChatGPT 연동 -->
+    <div class="section" id="chatSection">
       <h3>ChatGPT 연동</h3>
       <input type="text" id="chatInput" placeholder="ChatGPT에게 질문하기" />
       <button onclick="sendChat()">전송</button>
@@ -98,6 +108,7 @@
 
     <hr />
 
+    <!-- 기존 데이터 관리 (test_tb) -->
     <div class="section">
       <h3>기존 데이터 관리 (test_tb)</h3>
       <button onclick="test_select()">Select (모든 데이터 조회)</button>
@@ -114,7 +125,21 @@
 
     <hr />
 
-    <div class="section">
+    <!-- 로그인 섹션 -->
+    <div class="section" id="loginSection">
+      <h3>로그인</h3>
+      <input type="text" id="loginUsernameOrEmail" placeholder="사용자 이름 또는 이메일" />
+      <input type="password" id="loginPassword" placeholder="비밀번호" />
+      <button onclick="loginUser()">로그인</button>
+      <button onclick="logoutUser()">로그아웃</button>
+      <div id="loginStatus" class="message-display"></div>
+      <p>계정이 없으신가요? <span class="scroll-to-section" onclick="scrollToSection('userManagementSection')">회원가입</span></p>
+    </div>
+
+    <hr />
+
+    <!-- 사용자 관리 섹션 -->
+    <div class="section" id="userManagementSection">
       <h3>사용자 관리 (users 테이블)</h3>
       <h4>사용자 생성</h4>
       <input type="text" id="createUsername" placeholder="사용자 이름" />
@@ -139,13 +164,14 @@
 
     <hr />
 
+    <!-- 문제 은행 관리 -->
     <div class="section">
       <h3>문제 은행 관리 (problems 테이블)</h3>
       <h4>문제 추가 (수동)</h4>
-      <textarea id="addProblemQuestion" placeholder="문제 내용" rows="3"></textarea>
-      <textarea id="addProblemAnswer" placeholder="정답 내용" rows="2"></textarea>
-      <input type="text" id="addProblemCategory" placeholder="카테고리 (선택 사항)" />
-      <input type="text" id="addProblemDifficulty" placeholder="난이도 (선택 사항)" />
+      <input type="text" id="addProblemQuestion" placeholder="문제 내용 입력 (예: 2 + 2는 무엇인가요?)" />
+      <input type="text" id="addProblemAnswer" placeholder="정답 입력 (예: 4)" />
+      <input type="text" id="addProblemCategory" placeholder="카테고리 입력 (예: 수학)" />
+      <input type="text" id="addProblemDifficulty" placeholder="난이도 입력 (예: 하, 중, 상)" />
       <button onclick="addProblem()">문제 추가</button>
       <div id="addProblemStatus" class="message-display"></div>
 
@@ -312,7 +338,6 @@
     }
 
     function addProblem() {
-      // 변수명 서버와 일치
       const question_text = $('#addProblemQuestion').val().trim();
       const answer_text = $('#addProblemAnswer').val().trim();
       const category = $('#addProblemCategory').val().trim();
@@ -373,7 +398,6 @@
       });
     }
 
-    // 💡 새로운 기능: 문제 삭제 함수
     function deleteProblem() {
       const problemId = $('#deleteProblemId').val().trim();
       const responseDiv = 'deleteProblemStatus';
@@ -384,14 +408,14 @@
       }
       displayMessage(responseDiv, `문제 ID ${problemId} 삭제 중...`, 'success');
       $.ajax({
-        url: '/problems/delete', // 백엔드 라우트
-        method: 'POST', // DELETE 대신 POST를 사용 (Knex delete()는 POST로도 가능)
+        url: '/problems/delete',
+        method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ id: problemId }), // ID를 객체로 보냄
+        data: JSON.stringify({ id: problemId }),
         success: function(res) {
           displayMessage(responseDiv, res.message || `문제 ID ${problemId}가 성공적으로 삭제되었습니다.`, 'success');
           $('#deleteProblemId').val('');
-          listProblems(); // 삭제 후 목록 새로고침
+          listProblems();
         },
         error: function(xhr) {
           let errorMessage = '알 수 없는 오류';
@@ -406,7 +430,6 @@
       });
     }
 
-    // 💡 새로운 기능: 사용자 삭제 함수
     function deleteUser() {
       const userId = $('#deleteUserId').val().trim();
       const responseDiv = 'deleteUserStatus';
@@ -417,14 +440,14 @@
       }
       displayMessage(responseDiv, `사용자 ID ${userId} 삭제 중...`, 'success');
       $.ajax({
-        url: '/users/delete', // 백엔드 라우트
-        method: 'POST', // DELETE 대신 POST를 사용
+        url: '/users/delete',
+        method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ id: userId }), // ID를 객체로 보냄
+        data: JSON.stringify({ id: userId }),
         success: function(res) {
           displayMessage(responseDiv, res.message || `사용자 ID ${userId}가 성공적으로 삭제되었습니다.`, 'success');
           $('#deleteUserId').val('');
-          listUsers(); // 삭제 후 목록 새로고침
+          listUsers();
         },
         error: function(xhr) {
           let errorMessage = '알 수 없는 오류';
@@ -438,6 +461,87 @@
         }
       });
     }
+
+   function loginUser() {
+    const usernameOrEmail = $('#loginUsernameOrEmail').val().trim();
+    const password = $('#loginPassword').val().trim();
+    const responseDiv = 'loginStatus';
+
+    if (!usernameOrEmail || !password) {
+        displayMessage(responseDiv, '사용자 이름 또는 이메일과 비밀번호를 모두 입력해주세요.', 'error');
+        return;
+    }
+    displayMessage(responseDiv, '로그인 시도 중...', 'success');
+    $.ajax({
+        url: '/users/login', // 백엔드 라우트
+        method: 'POST',
+        contentType: 'application/json',
+        // 💡 이 부분이 수정된 핵심입니다:
+        data: JSON.stringify({ usernameOrEmail: usernameOrEmail, password }),
+        success: function(res) {
+            if (res.success) {
+                displayMessage(responseDiv, '로그인 성공! 환영합니다.', 'success');
+                $('#loginUsernameOrEmail').val('');
+                $('#loginPassword').val('');
+                // 💡 로그인 성공 후 리다이렉트 또는 UI 변경 로직 추가 가능
+                // 예: window.location.href = '/dashboard';
+            } else {
+                displayMessage(responseDiv, res.error || '로그인 실패: 정보가 올바르지 않습니다.', 'error');
+            }
+        },
+        error: function(xhr) {
+            let errorMessage = '알 수 없는 오류';
+            try {
+                const errorData = JSON.parse(xhr.responseText);
+                errorMessage = errorData.error || xhr.statusText;
+            } catch (e) {
+                errorMessage = xhr.statusText;
+            }
+            displayMessage(responseDiv, '로그인 오류: ' + errorMessage, 'error');
+        }
+    });
+}
+
+    function scrollToSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+      function logoutUser() {
+        const responseDiv = 'loginStatus';
+        displayMessage(responseDiv, '로그아웃 처리 중...', 'success'); // 메시지 변경
+
+        $.ajax({
+            url: '/users/logout', // 백엔드 로그아웃 라우트 호출
+            method: 'POST', // POST 요청 (세션 무효화 등의 작업이 있을 수 있으므로)
+            contentType: 'application/json', // JSON 형식으로 보낼 데이터는 없지만 명시
+            data: JSON.stringify({}), // 보낼 데이터 없음
+            success: function(res) {
+                if (res.success) {
+                    displayMessage(responseDiv, res.message || '로그아웃 되었습니다.', 'success');
+                    $('#loginUsernameOrEmail').val(''); // 입력 필드 초기화
+                    $('#loginPassword').val(''); // 입력 필드 초기화
+                    // 필요하다면 페이지 리다이렉션
+                    // window.location.href = '/';
+                } else {
+                    displayMessage(responseDiv, res.error || '로그아웃 실패: 알 수 없는 오류', 'error');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = '알 수 없는 오류';
+                try {
+                    const errorData = JSON.parse(xhr.responseText);
+                    errorMessage = errorData.error || xhr.statusText;
+                } catch (e) {
+                    errorMessage = xhr.statusText;
+                }
+                displayMessage(responseDiv, '로그아웃 오류: ' + errorMessage, 'error');
+            }
+        });
+    }
+
   </script>
 </body>
 </html>
